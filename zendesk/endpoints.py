@@ -113,6 +113,11 @@ mapping_table = {
         'method': 'GET',
         'status': 200,
     },
+    'show_current_user': {
+        'path': '/users/current.json',
+        'method': 'GET',
+        'status': 200,
+    },
     'create_user': {
         'path': '/users.json',
         'method': 'POST',
