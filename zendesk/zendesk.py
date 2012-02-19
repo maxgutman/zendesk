@@ -33,6 +33,7 @@ except:
     import json
 from httplib import responses
 from endpoints import mapping_table
+from datetime import timedelta, datetime
 
 
 class ZendeskError(Exception):
