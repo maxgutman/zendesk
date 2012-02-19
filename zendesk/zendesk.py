@@ -208,3 +208,18 @@ class Zendesk(object):
             return json.loads(content)
         else:
             return responses[response_status]
+
+    @staticmethod
+    def get_datetime(date_string):
+        """
+        Convert date_string to a datetime object.
+
+        date_string is in 'CCYY/MM/DD HH:MM:SS -HHMM' format for json
+        responses.
+        """
+        date_minus_tz = date_string[:-6]
+        tz_offset = int(date_string[-6:])
+        delta = timedelta(hours = tz_offset / 100)
+        date = datetime.strptime(b, '%Y/%m/%d %H:%M:%S')
+        date -= delta
+        return date
