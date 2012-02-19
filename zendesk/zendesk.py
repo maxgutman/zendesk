@@ -221,6 +221,6 @@ class Zendesk(object):
         date_minus_tz = date_string[:-6]
         tz_offset = int(date_string[-6:])
         delta = timedelta(hours = tz_offset / 100)
-        date = datetime.strptime(b, '%Y/%m/%d %H:%M:%S')
+        date = datetime.strptime(date_minus_tz, '%Y/%m/%d %H:%M:%S')
         date -= delta
         return date
