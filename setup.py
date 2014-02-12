@@ -6,13 +6,13 @@ setup(
 	# Basic package information.
 	name = 'Zendesk',
 	author = 'Max Gutman, Stefan Tjarks',
-	version = '1.1.0',
+	version = '1.1.1',
 	author_email = 'max@eventbrite.com',
 	packages = ['zendesk'],
 	include_package_data = True,
 	install_requires = ['httplib2', 'simplejson'],
 	license='LICENSE.txt',
-	url = 'https://github.com/maxeventbrite/zendesk/tree/master',
+	url = 'https://github.com/eventbrite/zendesk',
 	keywords = 'zendesk api helpdesk',
 	description = 'Python API Wrapper for Zendesk',
 	classifiers = [

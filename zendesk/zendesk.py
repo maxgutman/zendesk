@@ -21,7 +21,7 @@
 """
 
 __author__ = "Max Gutman <max@eventbrite.com>"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 import re
 import httplib2
@@ -32,7 +32,14 @@ try:
 except:
     import json
 from httplib import responses
-from endpoints import mapping_table
+from endpoints import mapping_table as mapping_table_v1
+from endpoints_v2 import mapping_table as mapping_table_v2
+
+V2_COLLECTION_PARAMS = [
+    'page',
+    'per_page',
+    'sort_order',
+]
 
 
 class ZendeskError(Exception):
@@ -56,10 +63,20 @@ class AuthenticationError(ZendeskError):
 
 
 re_identifier = re.compile(r".*/(?P<identifier>\d+)\.(json|xml)")
+
+
 def get_id_from_url(url):
     match = re_identifier.match(url)
     if match and match.group('identifier'):
         return match.group('identifier')
+
+
+def clean_kwargs(kwargs):
+    """Format the kwargs to conform to API"""
+
+    for key, value in kwargs.iteritems():
+        if hasattr(value, '__iter__'):
+            kwargs[key] = ','.join(map(str, value))
 
 
 class Zendesk(object):
@@ -67,7 +84,7 @@ class Zendesk(object):
 
     def __init__(self, zendesk_url, zendesk_username=None,
                  zendesk_password=None, use_api_token=False, headers=None,
-                 client_args={}):
+                 client_args={}, api_version=1):
         """
         Instantiates an instance of Zendesk. Takes optional parameters for
         HTTP Basic Authentication
@@ -88,7 +105,7 @@ class Zendesk(object):
         self.data = None
 
         # Set attributes necessary for API
-        self.zendesk_url = zendesk_url
+        self.zendesk_url = zendesk_url.rstrip('/')
         self.zendesk_username = zendesk_username
         if use_api_token:
             self.zendesk_username += "/token"
@@ -104,11 +121,21 @@ class Zendesk(object):
 
         # Set http client and authentication
         self.client = httplib2.Http(**client_args)
-        if self.zendesk_username is not None and self.zendesk_password is not None:
+        if (self.zendesk_username is not None and
+                self.zendesk_password is not None):
             self.client.add_credentials(
                 self.zendesk_username,
                 self.zendesk_password
             )
+
+        self.api_version = api_version
+        if self.api_version == 1:
+            self.mapping_table = mapping_table_v1
+        elif self.api_version == 2:
+            self.mapping_table = mapping_table_v2
+        else:
+            raise ValueError("Unsupported Zendesk API Version: %d" %
+                             (self.api_version,))
 
     def __getattr__(self, api_call):
         """
@@ -130,9 +157,12 @@ class Zendesk(object):
         """
         def call(self, **kwargs):
             """ """
-            api_map = mapping_table[api_call]
-            method = api_map['method']
+            api_map = self.mapping_table[api_call]
             path = api_map['path']
+            if self.api_version == 2:
+                path = "/api/v2" + path
+
+            method = api_map['method']
             status = api_map['status']
             valid_params = api_map.get('valid_params', ())
             # Body can be passed from data or in args
@@ -147,15 +177,18 @@ class Zendesk(object):
             # Validate remaining kwargs against valid_params and add
             # params url encoded to url variable.
             for kw in kwargs:
-                if kw not in valid_params:
+                if (kw not in valid_params and
+                        (self.api_version == 2 and
+                         kw not in V2_COLLECTION_PARAMS)):
                     raise TypeError("%s() got an unexpected keyword argument "
                                     "'%s'" % (api_call, kw))
             else:
+                clean_kwargs(kwargs)
                 url += '?' + urllib.urlencode(kwargs)
 
-            # the 'search' endpoint in an open Zendesk site doesn't return a 401
-            # to force authentication. Inject the credentials in the headers to
-            # ensure we get the results we're looking for
+            # the 'search' endpoint in an open Zendesk site doesn't return a
+            # 401 to force authentication. Inject the credentials in the
+            # headers to ensure we get the results we're looking for
             if re.match("^/search\..*", path):
                 self.headers["Authorization"] = "Basic %s" % (
                     base64.b64encode(self.zendesk_username + ':' +
@@ -165,17 +198,17 @@ class Zendesk(object):
 
             # Make an http request (data replacements are finalized)
             response, content = \
-                    self.client.request(
-                        url,
-                        method,
-                        body=json.dumps(body),
-                        headers=self.headers
-                    )
+                self.client.request(
+                    url,
+                    method,
+                    body=json.dumps(body),
+                    headers=self.headers
+                )
             # Use a response handler to determine success/fail
             return self._response_handler(response, content, status)
 
         # Missing method is also not defined in our mapping table
-        if api_call not in mapping_table:
+        if api_call not in self.mapping_table:
             raise AttributeError('Method "%s" Does Not Exist' % api_call)
 
         # Execute dynamic method and pass in keyword args as data to API call
@@ -183,7 +216,7 @@ class Zendesk(object):
 
     @staticmethod
     def _response_handler(response, content, status):
-        """ 
+        """
         Handle response as callback
 
         If the response status is different from status defined in the
