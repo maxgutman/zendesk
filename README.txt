@@ -49,7 +49,7 @@ Example Use
 			},
 	        'subject':'My Starbucks coffee is cold!',
 	        'comment': {'body': 'please reheat my coffee'},
-	        'set_tags': 'coffee drinks',
+	        'tags': ['coffee', 'drinks'],
 	        'ticket_field_entries': [
 	            {
 	                'ticket_field_id': 1,
