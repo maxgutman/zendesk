@@ -48,6 +48,10 @@ mapping_table = {
         'path': '/tickets/{{ticket_id}}/incidents.json',
         'method': 'GET',
     },
+    'list_organization_tickets': {
+        'path': '/organizations/{{organization_id}}/tickets.json',
+        'method': 'GET',
+    },
 
     # Ticket Audits
     'list_audits': {
