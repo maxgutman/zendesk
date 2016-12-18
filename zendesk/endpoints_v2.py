@@ -109,6 +109,10 @@ mapping_table = {
         'path': '/views/preview.json',
         'method': 'POST',
     },
+    'preview_count': {
+        'path': '/views/preview/count.json',
+        'method': 'POST',
+    },
     'count_many_views': {
         'path': '/views/count_many.json',
         'valid_params': ('ids',),
