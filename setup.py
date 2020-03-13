@@ -12,7 +12,7 @@ setup(
 	include_package_data = True,
 	install_requires = ['httplib2', 'simplejson'],
 	license='LICENSE.txt',
-	url = 'https://github.com/eventbrite/zendesk',
+	url = 'https://github.com/maxgutman/zendesk',
 	keywords = 'zendesk api helpdesk',
 	description = 'Python API Wrapper for Zendesk',
 	classifiers = [
