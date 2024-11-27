@@ -7,6 +7,7 @@ mapping_table = {
     # Tickets
     'list_all_tickets': {
         'path': '/tickets.json',
+        'valid_params': ['external_id'],
         'method': 'GET',
     },
     'show_ticket': {
